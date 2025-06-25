@@ -1,9 +1,7 @@
-// src/middleware/authMiddleware.js   (use sempre “middleware”, não “middlewere”)
-const { auth, db } = require('../config/firebase');   // db já vem daqui
-                                                       // ❌ não importe { error } de 'console'
+const { auth, db } = require('../config/firebase');
 
 exports.autenticarToken = async (req, res, next) => {
-  const authHeader = req.headers.authorization;        // headers   ✅
+  const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return res.status(401).json({ message: 'Token não fornecido' });
   }
@@ -12,8 +10,8 @@ exports.autenticarToken = async (req, res, next) => {
 
   try {
     const decoded = await auth.verifyIdToken(token);
-    req.user = decoded;                                // guarda quem é o usuário
-    return next();                                     // passa para a próxima função
+    req.user = decoded;
+    return next();
   } catch (err) {
     console.error('Token inválido', err);
     return res.status(401).json({ message: 'Token inválido' });

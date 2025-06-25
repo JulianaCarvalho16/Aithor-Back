@@ -1,14 +1,12 @@
 // routes/chatRoutes.js
 const express = require('express');
 const axios   = require('axios');
-const { db }  = require('../config/firebase');          // db correto
+const { db }  = require('../config/firebase');
 const { autenticarToken } = require('../middlewere/authMiddlewere');
 const { Timestamp } = require('@google-cloud/firestore');
 
 const chatRoutes = express.Router();
-
-const huggingFaceApi   = 'https://api-inference.huggingface.co/models/EleutherAI/gpt-neo-1.3B';
-const huggingFaceToken = process.env.HUGGINGFACE_API_KEY;
+const openRouterKey = process.env.OPENROUTER_API_KEY;
 
 chatRoutes.post('/', autenticarToken, async (req, res) => {
   const { mensagem, estilo, gosto } = req.body;
@@ -17,9 +15,21 @@ chatRoutes.post('/', autenticarToken, async (req, res) => {
   try {
     const prompt = `Usuario: ${mensagem}\nEstilo: ${estilo}\nGosto: ${gosto || 'Nenhum informado'}\nChatbot`;
     const hfResponse = await axios.post(
-      huggingFaceApi,
-      { inputs: prompt },
-      { headers: { Authorization: `Bearer ${huggingFaceToken}` } }
+      'https://openrouter.ai/api/v1/chat/completions',
+      {
+        model: 'anthropic/claude-3-sonnet:beta',
+        mensages: [
+          { role: 'system', content: prompt },
+          { role: 'user', content: mensagem }
+        ]
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${openRouterKey}`,
+          'Content-Type': 'aplication/json',
+          'HTTP-Referer': 'http://localhost:3001'
+        }
+      }
     );
 
     const resposta =
@@ -32,12 +42,12 @@ chatRoutes.post('/', autenticarToken, async (req, res) => {
       resposta,
       estilo,
       gosto,
-      createdAt: Timestamp.now(),                        // use Timestamp do Firestore
+      createdAt: Timestamp.now(),
     });
 
     return res.json({ resposta });
   } catch (err) {
-    console.error('Erro ao se comunicar com Hugging Face:', err.message);
+    console.error('Erro ao se comunicar com OpenRouter:', err.message);
     return res.status(500).json({ error: 'Erro na resposta do chatbot.' });
   }
 });
