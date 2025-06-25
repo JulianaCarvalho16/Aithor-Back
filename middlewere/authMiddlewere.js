@@ -1,19 +1,21 @@
-import { error } from "console";
-import { auth } from "../config/firebase";
+// src/middleware/authMiddleware.js   (use sempre “middleware”, não “middlewere”)
+const { auth, db } = require('../config/firebase');   // db já vem daqui
+                                                       // ❌ não importe { error } de 'console'
 
-export async function autenticationToken( req, res, next ) {
-    const authHeander = req.heanders.authorization;
-    if (!authHeander || !authHeander.startWith("Bearer")){
-        return res.status(401).json({ message: "Token não fornecido"});
-    }
+exports.autenticarToken = async (req, res, next) => {
+  const authHeader = req.headers.authorization;        // headers   ✅
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ message: 'Token não fornecido' });
+  }
 
-    const token = authHeander.split("Bearer")[1];
+  const token = authHeader.split(' ')[1];
 
-    try {
-        const decodificado = await auth.verifyIdToken(token);
-        req.user = decodificado;
-        next();
-    } catch (error){
-        console.error("Token invalido", error);
-    }
-}
+  try {
+    const decoded = await auth.verifyIdToken(token);
+    req.user = decoded;                                // guarda quem é o usuário
+    return next();                                     // passa para a próxima função
+  } catch (err) {
+    console.error('Token inválido', err);
+    return res.status(401).json({ message: 'Token inválido' });
+  }
+};

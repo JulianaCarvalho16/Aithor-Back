@@ -1,12 +1,11 @@
-import admin from "firebase-admin";
-import serviceAccount from "./serviceAccount.json" assert { type: "json" };
+const admin = require ("firebase-admin");
+const serviceAccount = require ("./serviceAccount.json");
 
-admin.inicializeApp({
-    credential:
-    admin.credential(serviceAccount),
-});
+admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount)
+  });
 
-const db = admin.firebase();
+const db = admin.firestore();
 const auth = admin.auth();
 
-export { db, auth };
+module.exports = { db, auth };
