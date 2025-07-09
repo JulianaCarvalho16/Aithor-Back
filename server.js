@@ -1,17 +1,30 @@
-const express = require  ("express");
-const cors = require ("cors");
-const bodyParser = require ("body-parser");
-const chatRoutes = require ("./routes/chatRoutes");
-const dotenv = require ("dotenv").config();
+require("dotenv").config();
+const express = require("express");
+const cors = require("cors");
 
+const sequelize = require("./config/postgres");
+const connectMongo = require("./config/mongodb");
+
+const authRoutes = require("./routes/auth");
+const chatRoutes = require("./routes/chat");
 
 const app = express();
 app.use(cors());
-app.use(bodyParser.json());
+app.use(express.json());
 
-app.use("/chat", chatRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api/chat", chatRoutes);
 
-const PORT = process.env.PORT ||   3001;
-app.listen(PORT, () => {
-    console.log(`Servidor rodando na porta ${PORT}`);
-});
+const PORT = process.env.PORT || 3000;
+
+const startServer = async () => {
+  try {
+    await sequelize.sync();
+    await connectMongo();
+    app.listen(PORT, () => console.log(`🚀 Servidor rodando na porta ${PORT}`));
+  } catch (err) {
+    console.error("Erro ao iniciar:", err);
+  }
+};
+
+startServer();
