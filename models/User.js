@@ -1,8 +1,20 @@
-const express = require("express");
-const router = express.Router();
-const auth = require("../middleware/authMiddleware");
-const { sendMessage } = require("../controllers/chatController");
+const { DataTypes } = require("sequelize");
+const sequelize = require("../config/postgres");
 
-router.post("/message", auth, sendMessage);
+const User = sequelize.define("User", {
+  name: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  email: {
+    type: DataTypes.STRING,
+    unique: true,
+    allowNull: false,
+  },
+  password: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+});
 
-module.exports = router;
+module.exports = User;

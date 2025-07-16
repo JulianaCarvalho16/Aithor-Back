@@ -6,7 +6,6 @@ exports.sendMessage = async (req, res) => {
   const userId = req.user.id;
 
   try {
-    // 1. Envia para o OpenRouter
     const response = await axios.post("https://openrouter.ai/api/v1/chat/completions", {
       model: "openai/gpt-3.5-turbo",
       messages: [
@@ -21,7 +20,6 @@ exports.sendMessage = async (req, res) => {
 
     const reply = response.data.choices[0].message.content;
 
-    // 2. Salva no MongoDB
     const conversation = new Conversation({
       userId,
       messages: [
@@ -34,6 +32,6 @@ exports.sendMessage = async (req, res) => {
 
     res.json({ reply });
   } catch (err) {
-    res.status(500).json({ error: "Erro ao processar mensagem" });
+  res.status(500).json({ error: "Erro no login" });
   }
 };
