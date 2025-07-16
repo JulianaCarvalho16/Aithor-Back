@@ -1,6 +1,6 @@
 const express = require("express");
 const axios = require("axios");
-const autenticarToken = require("../middleware/authMiddleware");
+const autenticarToken = require("../middlewere/authMiddleware");
 const admin = require("firebase-admin");
 
 const chatRoutes = express.Router();
