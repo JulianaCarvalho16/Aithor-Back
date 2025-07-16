@@ -4,24 +4,31 @@ const jwt = require("jsonwebtoken");
 require("dotenv").config();
 
 exports.register = async (req, res) => {
-  const { name, email, password } = req.body;
+  const { name, email, password, style } = req.body;
 
   try {
     const hashed = await bcrypt.hash(password, 10);
-    const user = await User.create({ name, email, password: hashed });
+    const user = await User.create({
+      name,
+      email: email.trim().toLowerCase(), 
+      password: hashed,
+      style
+    });
 
-    const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET, {
+    const token = jwt.sign({ id: user.id, email: user.email, estilo: user.estilo }, process.env.JWT_SECRET, {
       expiresIn: "1h",
     });
 
-    res.status(201).json({ message: "Usuário registrado", token });
+    res.status(201).json({ message: "Usuário registrado", token, name: user.name });
   } catch (err) {
+    console.error("Erro no registro:", err.message);
     res.status(500).json({ error: "Erro no registro" });
   }
 };
 
 exports.login = async (req, res) => {
-  const { email, password } = req.body;
+  const email = req.body.email?.trim().toLowerCase();
+  const password = req.body.password;
 
   try {
     const user = await User.findOne({ where: { email } });
@@ -36,11 +43,12 @@ exports.login = async (req, res) => {
     }
 
     const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
+      expiresIn: "2h",
     });
 
-    res.json({ token });
+    res.json({ token, name: user.name }); 
   } catch (err) {
+    console.error("Erro no login:", err.message);
     res.status(500).json({ error: "Erro no login" });
   }
 };

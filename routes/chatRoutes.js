@@ -2,29 +2,28 @@ const express = require("express");
 const axios = require("axios");
 const autenticarToken = require("../middlewere/authMiddleware");
 const Conversation = require("../models/Conversation");
+const User = require("../models/User"); 
 
 const chatRoutes = express.Router();
 const togetherKey = process.env.TOGETHER_API_KEY;
 
-const extractText = (openRouterData) => {
-  try {
-    return openRouterData.choices?.[0]?.message?.content || "Desculpe, não consegui entender!";
-  } catch {
-    return "Desculpe, não consegui entender!";
-  }
-};
-
 chatRoutes.post("/message", autenticarToken, async (req, res) => {
-  const { message, styles = "neutro", taste = "sem preferências" } = req.body;
+  const { message } = req.body;
   const userId = req.user?.id;
 
   if (!userId) {
     return res.status(401).json({ error: "Usuário não autenticado ou token inválido." });
   }
 
- const prompt = `Você é um chatbot ${styles}. O usuário gosta de ${taste}. Responda de forma natural.\n\nUsuário: ${message}\nChatbot:`;
-
   try {
+    const usuario = await User.findByPk(userId); 
+    if (!usuario) {
+      return res.status(404).json({ error: "Usuário não encontrado" });
+    }
+
+    const styles = usuario.estilo || "neutro"; 
+    const prompt = `Você é um chatbot com estilo ${styles}. Responda com naturalidade, carisma e coerência com essa personalidade. Evite repetir a mesma coisa que o usuário disser. Apenas responda de forma fluída e envolvente, como em uma conversa real.\n\n${message}`;
+
     const { data } = await axios.post(
       "https://api.together.xyz/v1/completions",
       {
@@ -32,15 +31,16 @@ chatRoutes.post("/message", autenticarToken, async (req, res) => {
         prompt: prompt,
         max_tokens: 512,
         temperature: 0.7,
-        top_p: 0.9
+        top_p: 0.9,
       },
       {
         headers: {
           Authorization: `Bearer ${togetherKey}`,
-          "Content-Type": "application/json"
-        }
+          "Content-Type": "application/json",
+        },
       }
     );
+
     const reply = data.choices?.[0]?.text?.trim() || "Não consegui entender!";
 
     const conversation = new Conversation({
@@ -50,7 +50,6 @@ chatRoutes.post("/message", autenticarToken, async (req, res) => {
         { role: "assistant", content: reply },
       ],
       styles,
-      taste,
     });
 
     await conversation.save();
