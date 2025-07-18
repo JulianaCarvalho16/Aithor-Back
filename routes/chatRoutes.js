@@ -22,16 +22,18 @@ chatRoutes.post("/message", autenticarToken, async (req, res) => {
     }
 
     const styles = usuario.estilo || "neutro"; 
-    const prompt = `Você é um chatbot com estilo ${styles}. Responda com naturalidade, carisma e coerência com essa personalidade. Evite repetir a mesma coisa que o usuário disser. Apenas responda de forma fluída e envolvente, como em uma conversa real.\n\n${message}`;
+    const prompt = `Você é um chatbot com estilo ${styles}. Seu papel é responder de forma clara e objetiva. Nunca repita o que o usuário escreveu, nunca aja como se fosse o usuário, e não comece com apresentações do tipo "eu sou o chatbot". Apenas responda com naturalidade, usando o estilo indicado (${styles}).  
+    Seja direto e fale só como você mesmo: responda a pergunta ou comentário com criatividade e personalidade, em frases curtas. Evite monólogos ou respostas extensas.  
+    Agora responda à seguinte mensagem:\n\n${message}`;
 
     const { data } = await axios.post(
       "https://api.together.xyz/v1/completions",
       {
         model: "mistralai/Mistral-7B-Instruct-v0.2",
         prompt: prompt,
-        max_tokens: 512,
-        temperature: 0.7,
-        top_p: 0.9,
+        max_tokens: 500,
+        temperature: 0.5,
+        top_p: 0.8,
       },
       {
         headers: {
